@@ -1,7 +1,7 @@
 import pendulum
 import os
 import csv
-from dateutil import parser
+
 import uuid
 from datetime import datetime
 import argparse
