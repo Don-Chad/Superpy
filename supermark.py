@@ -1,6 +1,7 @@
 import pendulum
 import os
 import csv
+
 import uuid
 from datetime import datetime
 import argparse
@@ -23,14 +24,17 @@ from rich.syntax import Syntax
 
 # configuration for CSV files
 
-BOUGHT_FILE = 'Database/bought.csv'
-SOLD_FILE = 'Database/sold.csv'
-DATE_FILE = 'Database/date.csv'
+BOUGHT_FILE = 'bought.csv'
+SOLD_FILE = 'sold.csv'
+DATE_FILE = 'date.csv'
 BOUGHT_ITEMS = ['bought_id', 'product_name', 'buy_date', 'buy_price', 'expiration_date']
 SOLD_ITEMS = ['sold_id', 'product_name', 'bought_id', 'sell_price', 'sell_date']
 
 # getting today's date from file
 def get_today_from_file(file_path):
+    #turning file path into absolute path
+    file_path = os.path.abspath(file_path)
+    
     dt = pendulum.today().date()
     timeshift = 0
     if os.path.exists(file_path):
@@ -54,6 +58,8 @@ def apply_timeshift(date, timeshift):
 today = get_today_from_file(DATE_FILE)
 
 def check_file_exists(file, header):
+    # turnign file file into an absolute path
+    file = os.path.abspath(file)
     write_header = False
     if not os.path.exists(file):
         write_header = True
