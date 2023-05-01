@@ -1,7 +1,6 @@
 import pendulum
 import os
 import csv
-
 import uuid
 from datetime import datetime
 import argparse
@@ -18,8 +17,6 @@ from rich.syntax import Syntax
 # # Do not change these lines.
 # __winc_id__ = "a2bc36ea784242e4989deb157d527ba0"
 # __human_name__ = "superpy"
-
-
 # # Your code below this line.
 
 # configuration for CSV files
@@ -71,27 +68,36 @@ def check_file_exists(file, header):
 # checking if bought and sold files exist, and create them if they don't
 check_file_exists(BOUGHT_FILE, BOUGHT_ITEMS) 
 check_file_exists(SOLD_FILE, SOLD_ITEMS) 
+from datetime import timedelta
+import pendulum
 
 # shifting days from variable today
-def timeshift(days: int):
+def timeshift(days, specific=False):
     global today
-    today += timedelta(days=days)
+    if specific:
+        today = days
+    else:
+        today += timedelta(days=days)
+    
     with open(DATE_FILE, 'r') as date_file:
         file_content = date_file.read().strip().split(',')
         original_date = file_content[0]
 
-        
     if len(file_content) > 1:
         existing_timeshift = int(file_content[1])
     else:
         existing_timeshift = 0
 
-    updated_timeshift = existing_timeshift + days
+    if specific:
+        updated_timeshift = 0
+    else:
+        updated_timeshift = existing_timeshift + days
 
     with open(DATE_FILE, 'w') as date_file:
         date_file.write(f"{original_date},{updated_timeshift}")
 
     return today
+
 
 # getting sold bought ids
 def get_sold_bought_ids():
@@ -150,9 +156,10 @@ def multiple_buy(product, quantity):
     for i in range(quantity):
         buy(product)
 
-def multiple_sell(product, quantity):
+def multiple_sell(product_name, sell_price, sell_date, quantity):
     for i in range(quantity):
-        sell(product)
+        sell(product_name, sell_price, sell_date)
+
 
 def sell(product_name, sell_price, sell_date=None):
     # validatiting the sell_price
@@ -354,6 +361,7 @@ def display_help_menu():
     python3 supermark.py profit 2024-01-01 2024-01-31    (DATE)(starting range)(DATE)(ending range)
     python3 supermark.py stats
     python3 supermark.py timeshift 5  (NUMBER OF DAYS TO SHIFT)
+    python3 supermark.py timeshift 2024-02-02  (DATE TO SHIFT TO)
     '''
     syntax_code = Syntax(code, "python", theme="monokai", line_numbers=True)
 
@@ -392,7 +400,7 @@ if __name__ == "__main__":
             # deciding if we can buy, or multibuy, if there are more then 3 arguments
             product_name = args.product_args[0]
             price = args.product_args[1]
-            date = args.product_args[2]
+            date = str(convert_date(args.product_args[2], today))
             amount = None
             product = Product(product_name, price, date)
             if len(args.product_args) > 3 and args.product_args[3] is not None:
@@ -413,9 +421,10 @@ if __name__ == "__main__":
             sell_price = args.product_args[1]
             amount = None
             if len(args.product_args) >= 3:
-                sell_date = args.product_args[2]
+                sell_date = str(convert_date(args.product_args[2], today))
             if len(args.product_args) > 3 and args.product_args[3] is not None:
                 amount = args.product_args[3]
+            
 
             if amount:
                 multiple_sell(product_name, sell_price, sell_date, int(amount))
@@ -455,8 +464,22 @@ if __name__ == "__main__":
 
         elif args.action == 'timeshift':
             if len(args.product_args) != 1:
-                print("Please provide the number of days to shift the date. \n Example: python3 supermark.py timeshift 5")
+                print("Please provide the number of days to shift the date. \n Example: python3 supermark.py timeshift 5,\n You can also set the internal date to any date specified.\n Example: python3 supermark.py timeshift 2024-01-01 ")
                 sys.exit()
-            days_to_shift = int(args.product_args[0])
-            new_date = timeshift(days_to_shift)
-            print(f"Shifted date by {days_to_shift} days. New date: {new_date}")
+            
+            try:
+                # Try to parse the input as a date
+                input_date = pendulum.parse(args.product_args[0], strict=True)
+                specific = True
+                days_to_shift = input_date
+            except ValueError:
+                # If it's not a valid date, assume it's an integer representing the number of days to shift
+                specific = False
+                days_to_shift = int(args.product_args[0])
+
+            new_date = timeshift(days_to_shift, specific=specific)
+            if specific:
+                print(f"Set internal date to {input_date.strftime('%Y-%m-%d')}")
+            else:
+                print(f"Shifted date by {days_to_shift} days. New date: {new_date}")
+
