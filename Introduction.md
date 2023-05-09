@@ -64,13 +64,19 @@ Get a crystal clear visual representation of your costs, revenue, and profit wit
 ***python3 supermark.py stats
 python3 supermark.py --display-stats***
 
-7**. Changing the system date for today:**
+**7. Changing the system date for today:**
 
-In case you want you need to do extensive administration work, the system’s date can be time-shifted. This will change the internal date of the system by X (amount of days), working on all the operations.
+In case you want you need to do extensive administration work, the system’s date can be time-shifted. This will set the internal date of the system to a given date, or move it by X (amount of days). This will work on all the operations.
 
-Be mindful: the time-shift is a permanent change, staying active until you shift it back. Shifting back is done by executing a time-shift with the negative value of the current applied time-shift value. 
+You can set a new internal date accordingly:
+
+***python3 supermark.py timesshift 2024-11-01
+
+If you want to move the internal date forwards or backwards:
 
 ***python3 supermark.py timesshift -5
 python3 supermark.py timesshift +5***
+
+Be mindful: the time-shift 4 is a permanent change, staying active until you shift it back. Shifting back is done by executing a time-shift with the negative value of the current applied time-shift value. 
 
 Now that you're  up to date with the knowledge of the fantastic Super-Mark CLI, you're ready to conquer the supermarket world. Happy selling! 🎉

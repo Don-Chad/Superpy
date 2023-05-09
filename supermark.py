@@ -13,6 +13,7 @@ import seaborn as sns
 from rich import print
 from rich.table import Table
 from rich.syntax import Syntax
+import time
 
 # # Do not change these lines.
 # __winc_id__ = "a2bc36ea784242e4989deb157d527ba0"
@@ -73,9 +74,11 @@ import pendulum
 
 # shifting days from variable today
 def timeshift(days, specific=False):
+    
     global today
     if specific:
-        today = days
+        today = pendulum.today().date()
+        today += timedelta(days=days)
     else:
         today += timedelta(days=days)
     
@@ -95,7 +98,7 @@ def timeshift(days, specific=False):
 
     with open(DATE_FILE, 'w') as date_file:
         date_file.write(f"{original_date},{updated_timeshift}")
-
+    
     return today
 
 
@@ -463,6 +466,7 @@ if __name__ == "__main__":
                 profit(date1, date2)
 
         elif args.action == 'timeshift':
+            
             if len(args.product_args) != 1:
                 print("Please provide the number of days to shift the date. \n Example: python3 supermark.py timeshift 5,\n You can also set the internal date to any date specified.\n Example: python3 supermark.py timeshift 2024-01-01 ")
                 sys.exit()
@@ -471,15 +475,19 @@ if __name__ == "__main__":
                 # Try to parse the input as a date
                 input_date = pendulum.parse(args.product_args[0], strict=True)
                 specific = True
-                days_to_shift = input_date
+                #calculate the difference in days from the input date to today's date
+                days_to_shift = (input_date - pendulum.today()).in_days()
+                print (days_to_shift)
             except ValueError:
                 # If it's not a valid date, assume it's an integer representing the number of days to shift
                 specific = False
                 days_to_shift = int(args.product_args[0])
-
+            
             new_date = timeshift(days_to_shift, specific=specific)
             if specific:
-                print(f"Set internal date to {input_date.strftime('%Y-%m-%d')}")
+                # print(f"Set internal date to {input_date.strftime('%Y-%m-%d')}")
+                print(f"Shifted date by {days_to_shift} days from today. New date: {new_date}")
+                
             else:
-                print(f"Shifted date by {days_to_shift} days. New date: {new_date}")
+                print(f"Shifted date by {days_to_shift} days from internal date. New date: {new_date}")
 
