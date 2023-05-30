@@ -46,8 +46,6 @@ def get_today_from_file(file_path):
     dt = dt.add(days=timeshift)
     return dt
 
-# def apply_timeshift(date, timeshift):
-    # return date.add(days=timeshift)
 
 # retreiving TODAY and timeshift from file
 today = get_today_from_file(DATE_FILE)
@@ -70,7 +68,7 @@ check_file_exists(SOLD_FILE, SOLD_ITEMS)
 
 # shifting days from variable today
 def timeshift(days, today = today):
-    # today = pendulum.today().date()
+    
     today = pendulum.today().date()
     timeshift = 0
     if os.path.exists(DATE_FILE):
