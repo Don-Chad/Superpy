@@ -186,7 +186,7 @@ def inventory(date=today):
 
     for item in bought_items:
         expiration_date = pendulum.parse(item[4], strict=False).date()
-        if date < expiration_date and item[0] not in sold_bought_ids:
+        if date <= expiration_date and item[0] not in sold_bought_ids:
             # creating a list of relevant fields to use as identification in  product_counts dictionary
             key = [item[1], item[3], item[4]] # [name, price, expiration_date]
             key_str = ",".join(str(e) for e in key)
