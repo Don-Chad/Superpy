@@ -2,18 +2,20 @@ import pendulum
 import os
 import csv
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 import argparse
 import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 from pineapple import intro_text
-from datetime import timedelta
+
 import seaborn as sns
 from rich import print
 from rich.table import Table
 from rich.syntax import Syntax
-import time
+
+
+
 
 # # Do not change these lines.
 # __winc_id__ = "a2bc36ea784242e4989deb157d527ba0"
@@ -29,28 +31,23 @@ BOUGHT_ITEMS = ['bought_id', 'product_name', 'buy_date', 'buy_price', 'expiratio
 SOLD_ITEMS = ['sold_id', 'product_name', 'bought_id', 'sell_price', 'sell_date']
 
 # getting today's date from file
+
 def get_today_from_file(file_path):
-    #turning file path into absolute path
     file_path = os.path.abspath(file_path)
-    
     dt = pendulum.today().date()
     timeshift = 0
     if os.path.exists(file_path):
         with open(file_path, 'r') as f:
             file_content = f.read().strip().split(',')
-            file_date = file_content[0]
             timeshift = int(file_content[1]) if len(file_content) > 1 else 0
-        if file_date == str(dt):
-            dt = apply_timeshift(dt, timeshift)
-            return dt
-    else:
-        with open(file_path, 'w') as f:
-            f.write(f"{str(dt)},{timeshift}")
-    dt = apply_timeshift(dt, timeshift)
+            
+    with open(file_path, 'w') as f:
+        f.write(f"{str(dt)},{timeshift}")
+    dt = dt.add(days=timeshift)
     return dt
 
-def apply_timeshift(date, timeshift):
-    return date.add(days=timeshift)
+# def apply_timeshift(date, timeshift):
+    # return date.add(days=timeshift)
 
 # retreiving TODAY and timeshift from file
 today = get_today_from_file(DATE_FILE)
@@ -69,37 +66,21 @@ def check_file_exists(file, header):
 # checking if bought and sold files exist, and create them if they don't
 check_file_exists(BOUGHT_FILE, BOUGHT_ITEMS) 
 check_file_exists(SOLD_FILE, SOLD_ITEMS) 
-from datetime import timedelta
-import pendulum
+
 
 # shifting days from variable today
-def timeshift(days, specific=False):
-    
-    global today
-    if specific:
-        today = pendulum.today().date()
-        today += timedelta(days=days)
-    else:
-        today += timedelta(days=days)
-    
-    with open(DATE_FILE, 'r') as date_file:
-        file_content = date_file.read().strip().split(',')
-        original_date = file_content[0]
-
-    if len(file_content) > 1:
-        existing_timeshift = int(file_content[1])
-    else:
-        existing_timeshift = 0
-
-    if specific:
-        updated_timeshift = 0
-    else:
-        updated_timeshift = existing_timeshift + days
-
+def timeshift(days, today = today):
+    # today = pendulum.today().date()
+    today = pendulum.today().date()
+    timeshift = 0
+    if os.path.exists(DATE_FILE):
+        with open(DATE_FILE, 'r') as date_file:
+            file_content = date_file.read().strip().split(',')
+            timeshift = int(file_content[1]) if len(file_content) > 1 else 0
+    updated_timeshift = timeshift + days
     with open(DATE_FILE, 'w') as date_file:
-        date_file.write(f"{original_date},{updated_timeshift}")
-    
-    return today
+        date_file.write(f"{str(today)},{updated_timeshift}")
+    return today.add(days=updated_timeshift)
 
 
 # getting sold bought ids
@@ -466,28 +447,34 @@ if __name__ == "__main__":
                 profit(date1, date2)
 
         elif args.action == 'timeshift':
-            
+        
             if len(args.product_args) != 1:
-                print("Please provide the number of days to shift the date. \n Example: python3 supermark.py timeshift 5,\n You can also set the internal date to any date specified.\n Example: python3 supermark.py timeshift 2024-01-01 ")
+                print("Please provide either the number of days to shift the date or a specific date. \nExample: python3 supermark.py timeshift 5\nExample: python3 supermark.py timeshift 2024-01-01")
                 sys.exit()
+
+            input_arg = args.product_args[0]
             
             try:
-                # Try to parse the input as a date
-                input_date = pendulum.parse(args.product_args[0], strict=True)
-                specific = True
-                #calculate the difference in days from the input date to today's date
-                days_to_shift = (input_date - pendulum.today()).in_days()
-                print (days_to_shift)
-            except ValueError:
-                # If it's not a valid date, assume it's an integer representing the number of days to shift
-                specific = False
-                days_to_shift = int(args.product_args[0])
-            
-            new_date = timeshift(days_to_shift, specific=specific)
-            if specific:
-                # print(f"Set internal date to {input_date.strftime('%Y-%m-%d')}")
-                print(f"Shifted date by {days_to_shift} days from today. New date: {new_date}")
+                # try to parse the input as a date
+                input_date = pendulum.parse(input_arg, strict=True).date()
+                # calculate the difference in days for the input date and the internal 'today' variable
+                days_to_shift = (input_date - today).in_days()
                 
-            else:
-                print(f"Shifted date by {days_to_shift} days from internal date. New date: {new_date}")
+            except ValueError:
+                # if it's not a valid date, check if it's a integer representing the number of days to shift
+                try:
+                    days_to_shift = int(input_arg)
+                    
+                except ValueError:
+                    print("Invalid input. Please provide either a valid date or a valid number of days to shift, bwwtween -10000 and 10000.")
+                    sys.exit()
+
+                # checking if the provided number of days to shift is within the given range
+                if not -10000 <= days_to_shift <= 10000:
+                    print("No valid number of days to timeshift. Must be between -10000 and 10000.")
+                    sys.exit()
+                    
+            new_date = timeshift(days_to_shift)
+            print(f"Shifted date by {days_to_shift} days. New date: {new_date}")
+
 
